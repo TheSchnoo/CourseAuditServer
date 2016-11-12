@@ -1,9 +1,9 @@
-package web;
-
 import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
+import web.Course;
+import web.Schedule;
 
 import java.util.ArrayList;
 import java.util.List;

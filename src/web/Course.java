@@ -47,7 +47,8 @@ public class Course {
     }
 
     public List<Course> getPrerequisites(){
-        return this.prerequisites;
+        DatabaseController databaseController = new DatabaseController();
+        return databaseController.getPrerequisites(getCode(), getNumber());
     }
 
     public void addPrerequisite(Course course){

@@ -5,61 +5,30 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistration;
 
-import java.net.URI;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 public class WebController {
 
-    @RequestMapping(value = "/start", method = RequestMethod.GET)
+    @RequestMapping(value = "/courses", method = RequestMethod.GET)
     public
     @ResponseBody
-    String start(@RequestParam(value = "bname", required = false) String bname) {
-        System.out.println("Start");
-        Connection connect = mySqlConnection();
-        try {
-            if(connect == null) {
-                System.out.println("Null connect");
-            }
-            if(connect.isClosed()) {
-                System.out.println("Connection closed");
-                return null;
-            }
-
-            ResultSet resultSet = connect.prepareStatement("SELECT * FROM beerinfo;").executeQuery();
-
-            BeerService bs = new BeerService();
-
-            ArrayList<BeerInfo> listBeers = new ArrayList<BeerInfo>();
-
-            while(resultSet.next()){
-                listBeers.add(bs.convertResultSetToBeerInfo(resultSet));
-            }
-            connect.close();
-            return "";
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+    List<Course> getCourses(@RequestParam(value = "code", required = false) String code,
+                            @RequestParam(value = "number", required = false) Integer number) {
+        DatabaseController databaseController = new DatabaseController();
+        if (code == null && number == null) {
+            return databaseController.selectAllCourses();
+        } else if (number == null) {
+            return databaseController.queryCourseByCode(code);
+        } else if (code == null) {
+            return  databaseController.queryCourseByNumber(number);
+        } else {
+            return databaseController.queryCourseByCode(code).stream()
+                    .filter(x -> number == x.getNumber())
+                    .collect(Collectors.toList());
         }
-        return null;
     }
-
-    private Connection mySqlConnection() {
-        Connection mySql = null;
-        System.out.println(System.getenv("CLEARDB_DATABASE_URL"));
-        try {
-            URI dbUri = new URI(System.getenv("CLEARDB_DATABASE_URL"));
-            String username = dbUri.getUserInfo().split(":")[0];
-            String password = dbUri.getUserInfo().split(":")[1];
-            String dbUrl = "jdbc:mysql://" + dbUri.getHost() + dbUri.getPath();
-            mySql = DriverManager.getConnection(dbUrl, username, password);
-        } catch (Exception e) {
-            System.out.println("Issue");
-            e.printStackTrace();
-        }
-        return mySql;
-    }
+}
